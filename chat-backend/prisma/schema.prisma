@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  password_hash String
+  createdAt     DateTime  @default(now()) @map("created_at")
+  messages      Message[]
+
+  @@map("users")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  room      String
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int  @map("user_id")
+
+  @@map("messages")
+}
