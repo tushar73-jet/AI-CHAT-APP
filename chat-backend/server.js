@@ -11,7 +11,6 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const server = http.createServer(app);
 
-// In-memory map to track users: { username -> socket.id }
 const userSockets = new Map();
 
 async function getBotUser() {
@@ -85,12 +84,10 @@ async function getAIResponse(message) {
 
 
 io.on('connection', (socket) => {
-  // --- NEW FEATURES ---
-  // Store user and broadcast new user list
+
   socket.username = socket.user.username;
   userSockets.set(socket.username, socket.id);
   io.emit('updateUserList', Array.from(userSockets.keys()));
-  // --------------------
 
   socket.on('joinRoom', async (room) => {
     socket.join(room);
@@ -126,28 +123,23 @@ io.on('connection', (socket) => {
         createdAt: msg.createdAt
       };
 
-      // --- UPDATED FOR DMs ---
       if (room.startsWith('dm:')) {
-        // It's a Direct Message
-        // Find the other user in the room name
         const usernames = room.split(':')[1].split('-');
         const otherUser = usernames.find(u => u !== socket.username);
         const recipientSocketId = userSockets.get(otherUser);
 
-        // Send to the other user if they are online
         if (recipientSocketId) {
           io.to(recipientSocketId).emit('chatMessage', messageData);
         }
-        // Send to self (so you see your own message)
+
         socket.emit('chatMessage', messageData);
 
       } else {
-        // It's a public room
+
         io.to(room).emit('chatMessage', messageData);
       }
-      // ------------------------
 
-      // AI Bot logic (no changes)
+
       if (content.toLowerCase().startsWith('@bot') && !room.startsWith('dm:')) {
         const userPrompt = content.replace(/@bot/gi, '').trim();
         if (userPrompt) {
@@ -172,24 +164,20 @@ io.on('connection', (socket) => {
     }
   });
 
-  // --- NEW "TYPING" EVENTS ---
   socket.on('typing', ({ room }) => {
-    // Broadcast to everyone in the room *except* the sender
     socket.to(room).emit('typing', { username: socket.username });
   });
 
   socket.on('stopTyping', ({ room }) => {
     socket.to(room).emit('stopTyping', { username: socket.username });
   });
-  // -------------------------
 
-  // --- NEW DISCONNECT LOGIC ---
+
   socket.on('disconnect', () => {
     userSockets.delete(socket.username);
-    // Broadcast the updated user list
     io.emit('updateUserList', Array.from(userSockets.keys()));
   });
-  // --------------------------
+
 });
 
 const PORT = process.env.PORT || 3001;
