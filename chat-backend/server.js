@@ -18,7 +18,7 @@ async function getBotUser() {
   try {
     let botUser = await prisma.user.findUnique({ where: { username: 'AI Bot' } });
     if (!botUser) {
-      const hashedPassword = await bcrypt.hash('bot_'_ + Date.now(), 10);
+      const hashedPassword = await bcrypt.hash('bot_'+ Date.now(), 10);
       botUser = await prisma.user.create({
         data: { username: 'AI Bot', password_hash: hashedPassword }
       });
