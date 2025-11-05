@@ -11,11 +11,14 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const server = http.createServer(app);
 
+// In-memory map to track users: { username -> socket.id }
+const userSockets = new Map();
+
 async function getBotUser() {
   try {
     let botUser = await prisma.user.findUnique({ where: { username: 'AI Bot' } });
     if (!botUser) {
-      const hashedPassword = await bcrypt.hash('bot_' + Date.now(), 10);
+      const hashedPassword = await bcrypt.hash('bot_'_ + Date.now(), 10);
       botUser = await prisma.user.create({
         data: { username: 'AI Bot', password_hash: hashedPassword }
       });
@@ -82,6 +85,13 @@ async function getAIResponse(message) {
 
 
 io.on('connection', (socket) => {
+  // --- NEW FEATURES ---
+  // Store user and broadcast new user list
+  socket.username = socket.user.username;
+  userSockets.set(socket.username, socket.id);
+  io.emit('updateUserList', Array.from(userSockets.keys()));
+  // --------------------
+
   socket.on('joinRoom', async (room) => {
     socket.join(room);
     
@@ -110,13 +120,35 @@ io.on('connection', (socket) => {
         data: { content, room, userId: socket.user.id }
       });
 
-      io.to(room).emit('chatMessage', {
+      const messageData = {
         content: msg.content,
         username: socket.user.username,
         createdAt: msg.createdAt
-      });
+      };
 
-      if (content.toLowerCase().startsWith('@bot')) {
+      // --- UPDATED FOR DMs ---
+      if (room.startsWith('dm:')) {
+        // It's a Direct Message
+        // Find the other user in the room name
+        const usernames = room.split(':')[1].split('-');
+        const otherUser = usernames.find(u => u !== socket.username);
+        const recipientSocketId = userSockets.get(otherUser);
+
+        // Send to the other user if they are online
+        if (recipientSocketId) {
+          io.to(recipientSocketId).emit('chatMessage', messageData);
+        }
+        // Send to self (so you see your own message)
+        socket.emit('chatMessage', messageData);
+
+      } else {
+        // It's a public room
+        io.to(room).emit('chatMessage', messageData);
+      }
+      // ------------------------
+
+      // AI Bot logic (no changes)
+      if (content.toLowerCase().startsWith('@bot') && !room.startsWith('dm:')) {
         const userPrompt = content.replace(/@bot/gi, '').trim();
         if (userPrompt) {
           const aiReply = await getAIResponse(userPrompt);
@@ -139,6 +171,25 @@ io.on('connection', (socket) => {
       console.error(err);
     }
   });
+
+  // --- NEW "TYPING" EVENTS ---
+  socket.on('typing', ({ room }) => {
+    // Broadcast to everyone in the room *except* the sender
+    socket.to(room).emit('typing', { username: socket.username });
+  });
+
+  socket.on('stopTyping', ({ room }) => {
+    socket.to(room).emit('stopTyping', { username: socket.username });
+  });
+  // -------------------------
+
+  // --- NEW DISCONNECT LOGIC ---
+  socket.on('disconnect', () => {
+    userSockets.delete(socket.username);
+    // Broadcast the updated user list
+    io.emit('updateUserList', Array.from(userSockets.keys()));
+  });
+  // --------------------------
 });
 
 const PORT = process.env.PORT || 3001;

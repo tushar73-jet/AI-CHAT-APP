@@ -191,3 +191,58 @@
   background: #d1d5db;
   border-radius: 3px;
 }
+/* --- ADD THESE STYLES --- */
+
+/* For the DM list */
+.online-users {
+  margin-top: 20px;
+  border-top: 1px solid #40444b;
+  padding-top: 20px;
+}
+
+.online-users h4 {
+  margin: 0 0 15px 0;
+  color: #8e9297;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.dm-btn .online-dot {
+  color: #23a55a; /* Green dot */
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+/* For the Emoji Picker */
+.picker-container {
+  position: relative;
+}
+
+.picker-container .emoji-picker-react {
+  position: absolute;
+  bottom: 10px; /* Position it above the form */
+  right: 20px;
+  z-index: 10;
+}
+
+.emoji-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 10px;
+  color: #555;
+}
+
+.emoji-btn:hover {
+  color: #000;
+}
+
+/* For the Typing Indicator */
+.typing-indicator {
+  height: 20px;
+  padding: 0 20px;
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+}
