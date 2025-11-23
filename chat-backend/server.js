@@ -7,6 +7,7 @@ const prisma = require('./src/config/prisma');
 const authRoutes = require('./src/routes/auth');
 const authSocket = require('./src/middleware/authSocket');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit')
 
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +45,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+  message: "Too many requests from this IP, please try again later."
+});
+app.use(limiter);
 app.use('/api/auth', authRoutes);
 
 const io = new Server(server, { cors: corsOptions });

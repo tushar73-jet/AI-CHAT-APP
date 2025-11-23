@@ -21,6 +21,8 @@ model Message {
   id        Int      @id @default(autoincrement())
   content   String   @db.Text
   room      String
+  // NEW: Flag to identify AI messages
+  isBot     Boolean  @default(false) 
   createdAt DateTime @default(now()) @map("created_at")
   
   user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
