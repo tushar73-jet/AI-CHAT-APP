@@ -52,9 +52,31 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use('/api/auth', authRoutes);
+// Global API error handler
+app.use((err, req, res, next) => {
+  console.error("API Error:", err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
 
 const io = new Server(server, { cors: corsOptions });
 io.use(authSocket);
+const { createAdapter } = require("@socket.io/redis-adapter");
+const { createClient } = require("ioredis");
+
+(async () => {
+  try {
+    const pubClient = createClient({ url: process.env.REDIS_URL });
+    const subClient = pubClient.duplicate();
+    await pubClient.connect();
+    await subClient.connect();
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log("Redis adapter connected");
+  } catch (err) {
+    console.error("Redis connection error:", err);
+  }
+})();
+
 
 async function getAIResponse(message) {
   if (!process.env.OPENAI_API_KEY) {
@@ -91,6 +113,9 @@ async function getAIResponse(message) {
 
 
 io.on('connection', (socket) => {
+  socket.on("error", (err) => {
+    console.error("Socket error:", err);
+  });
 
   socket.username = socket.user.username;
   userSockets.set(socket.username, socket.id);
@@ -186,6 +211,18 @@ io.on('connection', (socket) => {
   });
 
 });
+
+setInterval(async () => {
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  try {
+    await prisma.message.deleteMany({
+      where: { createdAt: { lt: cutoff } }
+    });
+    console.log("Old messages deleted");
+  } catch (err) {
+    console.error("Cleanup error:", err);
+  }
+}, 60 * 60 * 1000);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {

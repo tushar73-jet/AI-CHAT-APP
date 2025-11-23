@@ -224,9 +224,7 @@
   background: #d1d5db;
   border-radius: 3px;
 }
-/* --- ADD THESE STYLES --- */
 
-/* For the DM list */
 .online-users {
   margin-top: 20px;
   border-top: 1px solid #40444b;
@@ -241,19 +239,18 @@
 }
 
 .dm-btn .online-dot {
-  color: #23a55a; /* Green dot */
+  color: #23a55a;
   margin-right: 8px;
   font-size: 14px;
 }
 
-/* For the Emoji Picker */
 .picker-container {
   position: relative;
 }
 
 .picker-container .emoji-picker-react {
   position: absolute;
-  bottom: 10px; /* Position it above the form */
+  bottom: 10px;
   right: 20px;
   z-index: 10;
 }
@@ -271,7 +268,6 @@
   color: #000;
 }
 
-/* For the Typing Indicator */
 .typing-indicator {
   height: 20px;
   padding: 0 20px;
