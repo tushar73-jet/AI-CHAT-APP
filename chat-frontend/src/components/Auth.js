@@ -39,6 +39,11 @@ const Auth = ({ onLogin }) => {
         <h1>ChatApp</h1>
         <h2>{isLogin ? 'Login' : 'Register'}</h2>
         
+        <div className="loading-note">
+          <span className="info-icon">ℹ️</span>
+          <span>Note: Initial page load may take up to 1 minute to start. Please be patient.</span>
+        </div>
+        
         <form onSubmit={handleSubmit}>
           <input
             type="text"
