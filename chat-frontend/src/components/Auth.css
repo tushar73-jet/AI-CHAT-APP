@@ -5,7 +5,6 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  /* Deep space background */
   background-color: #0b0d17;
   background-image:
     radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15) 0%, transparent 25%),
@@ -15,7 +14,6 @@
   position: relative;
 }
 
-/* Subtle grid overlay */
 .auth-container::before {
   content: "";
   position: absolute;
@@ -45,6 +43,13 @@
   max-width: 440px;
   z-index: 10;
   animation: cardFloat 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
 }
 
 @keyframes cardFloat {
