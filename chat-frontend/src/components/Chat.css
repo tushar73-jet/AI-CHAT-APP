@@ -14,7 +14,8 @@
 
 .chat-app {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 70px);
+  margin-top: 70px;
   font-family: 'Inter', sans-serif;
   color: var(--text-primary);
   background: var(--main-bg);
@@ -215,8 +216,8 @@
 }
 
 .message.own .username {
-  color: var(--text-primary);
-  opacity: 0.8;
+  color: rgba(0, 0, 0, 0.7);
+  opacity: 1;
 }
 
 .time {
