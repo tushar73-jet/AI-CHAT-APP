@@ -72,6 +72,24 @@
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
+.auth-card h2 {
+  margin: 0 0 24px 0;
+  font-size: 28px;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Override standard input autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #2a2e45 inset !important;
+  -webkit-text-fill-color: white !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .auth-subtitle {
   color: #e2e8f0;
   margin-bottom: 40px;
