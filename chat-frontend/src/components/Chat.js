@@ -158,7 +158,7 @@ const Chat = ({ token, username, onLogout }) => {
           {!room.startsWith('dm:') && (
             <div className="ai-bot-note">
               <span className="bot-icon">🤖</span>
-              <span>To chat with AI Bot, start your message with <strong>@bot</strong> followed by your question.</span>
+              <span>Use <strong>@bot</strong> to chat with AI.</span>
             </div>
           )}
         </div>

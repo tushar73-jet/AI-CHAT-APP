@@ -5,6 +5,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  /* Deep space background */
   background-color: #0b0d17;
   background-image:
     radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15) 0%, transparent 25%),
@@ -14,6 +15,7 @@
   position: relative;
 }
 
+/* Subtle grid overlay */
 .auth-container::before {
   content: "";
   position: absolute;
@@ -45,13 +47,6 @@
   animation: cardFloat 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.auth-card form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-}
-
 @keyframes cardFloat {
   from {
     opacity: 0;
@@ -65,56 +60,37 @@
 }
 
 .auth-card h1 {
-  margin: 0 0 12px 0;
-  font-size: 42px;
-  background: linear-gradient(135deg, #ffffff 0%, #dbeafe 100%);
+  margin: 0 0 8px 0;
+  font-size: 40px;
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-weight: 800;
+  font-weight: 700;
   text-align: center;
-  letter-spacing: -0.01em;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-}
-
-.auth-card h2 {
-  margin: 0 0 24px 0;
-  font-size: 28px;
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
-}
-
-/* Override standard input autofill background */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px #2a2e45 inset !important;
-  -webkit-text-fill-color: white !important;
-  transition: background-color 5000s ease-in-out 0s;
+  letter-spacing: -0.02em;
 }
 
 .auth-subtitle {
-  color: #e2e8f0;
+  color: #94a3b8;
   margin-bottom: 40px;
-  font-size: 18px;
+  font-size: 16px;
   text-align: center;
-  font-weight: 400;
+  font-weight: 300;
 }
 
 .input-group {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   position: relative;
 }
 
 .input-group input {
   width: 100%;
-  padding: 18px 24px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 14px;
-  font-size: 18px;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 16px;
   color: #fff;
   transition: all 0.2s ease;
   font-family: inherit;
@@ -122,10 +98,10 @@ input:-webkit-autofill:active {
 
 .input-group input:focus {
   outline: none;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   border-color: #818cf8;
-  box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.25);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15);
+  transform: translateY(-1px);
 }
 
 .input-group input::placeholder {
@@ -232,7 +208,5 @@ input:-webkit-autofill:active {
   color: #fff;
 }
 
-.loading-note .info-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
+flex-shrink: 0;
+margin-top: 2px;
