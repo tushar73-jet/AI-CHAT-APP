@@ -215,7 +215,8 @@
 }
 
 .message.own .username {
-  color: rgba(26, 27, 38, 0.8);
+  color: var(--text-primary);
+  opacity: 0.8;
 }
 
 .time {
