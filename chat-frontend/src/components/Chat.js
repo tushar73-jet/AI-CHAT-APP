@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
-import EmojiPicker from 'emoji-picker-react'; 
+import EmojiPicker from 'emoji-picker-react';
 import './Chat.css';
 
 const getDMRoomName = (user1, user2) => {
@@ -21,7 +21,7 @@ const Chat = ({ token, username, onLogout }) => {
   const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
+    const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3005';
     const newSocket = io(socketUrl, { auth: { token } });
 
     newSocket.on('connect', () => {
@@ -34,7 +34,7 @@ const Chat = ({ token, username, onLogout }) => {
     newSocket.on('chatMessage', (messageData) => setMessages(prev => [...prev, messageData]));
 
     newSocket.on('updateUserList', (users) => {
-      setOnlineUsers(users.filter(u => u !== username)); 
+      setOnlineUsers(users.filter(u => u !== username));
     });
 
     newSocket.on('typing', ({ username: typingUser }) => {
@@ -50,7 +50,7 @@ const Chat = ({ token, username, onLogout }) => {
 
     setSocket(newSocket);
     return () => newSocket.close();
-  }, [token, room, username]); 
+  }, [token, room, username]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,11 +69,11 @@ const Chat = ({ token, username, onLogout }) => {
   const handleRoomChange = (newRoom) => {
     if (socket && newRoom !== room) {
       socket.emit('stopTyping', { room });
-      
+
       socket.emit('joinRoom', newRoom);
       setRoom(newRoom);
       setMessages([]);
-      setTypingUsers([]); 
+      setTypingUsers([]);
     }
   };
 
@@ -81,7 +81,7 @@ const Chat = ({ token, username, onLogout }) => {
     const dmRoomName = `dm:${getDMRoomName(username, dmUsername)}`;
     handleRoomChange(dmRoomName);
   };
-  
+
   const onEmojiClick = (emojiObject) => {
     setMessage(prev => prev + emojiObject.emoji);
     setShowPicker(false);
@@ -119,7 +119,7 @@ const Chat = ({ token, username, onLogout }) => {
           <h3>Welcome, {username}!</h3>
           <button onClick={onLogout} className="logout-btn">Logout</button>
         </div>
-        
+
         <div className="rooms">
           <h4>Rooms</h4>
           {['general', 'random', 'tech', 'gaming'].map(roomName => (
@@ -150,8 +150,8 @@ const Chat = ({ token, username, onLogout }) => {
       <div className="chat-main">
         <div className="chat-header">
           <div className="chat-header-top">
-            <h2>{getDisplayRoomName()}</h2> 
-            <span style={{color: isConnected ? 'green' : 'red', fontSize: '12px'}}>
+            <h2>{getDisplayRoomName()}</h2>
+            <span style={{ color: isConnected ? 'green' : 'red', fontSize: '12px' }}>
               ● {isConnected ? 'Connected' : 'Not connected'}
             </span>
           </div>
@@ -181,7 +181,7 @@ const Chat = ({ token, username, onLogout }) => {
             <div ref={messagesEndRef} />
           </div>
         </div>
-        
+
         <div className="picker-container">
           {showPicker && (
             <EmojiPicker onEmojiClick={onEmojiClick} />
@@ -189,16 +189,16 @@ const Chat = ({ token, username, onLogout }) => {
         </div>
 
         <div className="typing-indicator">
-          {typingUsers.length > 0 && 
+          {typingUsers.length > 0 &&
             !room.startsWith('dm:') &&
             `${typingUsers.join(', ')} ${typingUsers.length === 1 ? 'is' : 'are'} typing...`
           }
         </div>
 
         <form onSubmit={handleSubmit} className="message-form">
-          <button 
-            type="button" 
-            onClick={() => setShowPicker(!showPicker)} 
+          <button
+            type="button"
+            onClick={() => setShowPicker(!showPicker)}
             className="emoji-btn"
           >
             😊
@@ -206,10 +206,10 @@ const Chat = ({ token, username, onLogout }) => {
           <input
             type="text"
             value={message}
-            onChange={handleTyping} 
-            placeholder={`Message ${getDisplayRoomName()}...`} 
+            onChange={handleTyping}
+            placeholder={`Message ${getDisplayRoomName()}...`}
             className="message-input"
-            disabled={!isConnected} 
+            disabled={!isConnected}
           />
           <button type="submit" className="send-btn" disabled={!isConnected}>
             Send

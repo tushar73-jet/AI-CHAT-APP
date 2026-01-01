@@ -18,7 +18,7 @@ async function getBotUser() {
   try {
     let botUser = await prisma.user.findUnique({ where: { username: 'AI Bot' } });
     if (!botUser) {
-      const hashedPassword = await bcrypt.hash('bot_'+ Date.now(), 10);
+      const hashedPassword = await bcrypt.hash('bot_' + Date.now(), 10);
       botUser = await prisma.user.create({
         data: { username: 'AI Bot', password_hash: hashedPassword }
       });
@@ -30,13 +30,19 @@ async function getBotUser() {
   }
 }
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3002'];
+const envOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+const defaultOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3005'];
+const allowedOrigins = [...new Set([...envOrigins, ...defaultOrigins])];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
       callback(null, true);
     } else {
+      console.log("Blocked by CORS:", origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -46,8 +52,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 100, 
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Too many requests from this IP, please try again later."
 });
 app.use(limiter);
@@ -62,18 +68,33 @@ app.use((err, req, res, next) => {
 const io = new Server(server, { cors: corsOptions });
 io.use(authSocket);
 const { createAdapter } = require("@socket.io/redis-adapter");
-const { createClient } = require("ioredis");
+const Redis = require("ioredis");
 
 (async () => {
+  if (!process.env.REDIS_URL) {
+    console.log("REDIS_URL not set, skipping Redis adapter");
+    return;
+  }
   try {
-    const pubClient = createClient({ url: process.env.REDIS_URL });
+    const pubClient = new Redis(process.env.REDIS_URL, {
+      retryStrategy: times => {
+        // Stop retrying after 3 attempts if it fails
+        if (times > 3) {
+          console.log("Redis connection failed too many times, disabling adapter.");
+          return null;
+        }
+        return Math.min(times * 50, 2000);
+      }
+    });
     const subClient = pubClient.duplicate();
-    await pubClient.connect();
-    await subClient.connect();
+
+    pubClient.on('error', err => console.error("Redis Pub Error:", err.message));
+    subClient.on('error', err => console.error("Redis Sub Error:", err.message));
+
     io.adapter(createAdapter(pubClient, subClient));
-    console.log("Redis adapter connected");
+    console.log("Redis adapter initialized");
   } catch (err) {
-    console.error("Redis connection error:", err);
+    console.error("Redis setup error:", err);
   }
 })();
 
@@ -123,14 +144,14 @@ io.on('connection', (socket) => {
 
   socket.on('joinRoom', async (room) => {
     socket.join(room);
-    
+
     try {
       const messages = await prisma.message.findMany({
         where: { room },
         orderBy: { createdAt: 'asc' },
         include: { user: { select: { username: true } } }
       });
-      
+
       socket.emit('loadHistory', messages.map(msg => ({
         content: msg.content,
         username: msg.user.username,
@@ -177,12 +198,12 @@ io.on('connection', (socket) => {
         if (userPrompt) {
           const aiReply = await getAIResponse(userPrompt);
           const botUser = await getBotUser();
-          
+
           if (botUser) {
             const botMsg = await prisma.message.create({
               data: { content: aiReply, room, userId: botUser.id }
             });
-            
+
             io.to(room).emit('chatMessage', {
               content: botMsg.content,
               username: botUser.username,
@@ -224,7 +245,21 @@ setInterval(async () => {
   }
 }, 60 * 60 * 1000);
 
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3005;
+
+const startServer = (port) => {
+  const serverInstance = server.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+
+  serverInstance.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`Port ${port} is in use, trying ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error("Server error:", err);
+    }
+  });
+};
+
+startServer(PORT);

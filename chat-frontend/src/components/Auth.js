@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './Auth.css';
 
-const API_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/auth`;
+const API_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:3005'}/api/auth`;
 
 const Auth = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -38,12 +38,12 @@ const Auth = ({ onLogin }) => {
       <div className="auth-card">
         <h1>ChatApp</h1>
         <h2>{isLogin ? 'Login' : 'Register'}</h2>
-        
+
         <div className="loading-note">
           <span className="info-icon">ℹ️</span>
           <span>Note: Initial page load may take up to 1 minute to start. Please be patient.</span>
         </div>
-        
+
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -59,14 +59,14 @@ const Auth = ({ onLogin }) => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          
+
           {error && <div className="error">{error}</div>}
-          
+
           <button type="submit" className="auth-button">
             {isLogin ? 'Login' : 'Register'}
           </button>
         </form>
-        
+
         <p className="auth-switch">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button
