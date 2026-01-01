@@ -110,41 +110,65 @@
 }
 
 .chat-header {
-  background: rgba(31, 35, 53, 0.8);
+  background: rgba(31, 35, 53, 0.95);
   backdrop-filter: blur(12px);
-  padding: 20px 32px;
+  padding: 12px 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   z-index: 10;
-}
-
-.chat-header-top {
+  height: 70px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .chat-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: #c0caf5;
 }
 
-.ai-bot-note {
-  margin-top: 12px;
+.status-badge {
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.ai-note-inline {
   background: rgba(122, 162, 247, 0.1);
   border: 1px solid rgba(122, 162, 247, 0.2);
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 14px;
+  gap: 8px;
+  font-size: 13px;
   color: #7aa2f7;
+  white-space: nowrap;
+}
+
+.ai-note-inline .bot-icon {
+  font-size: 16px;
+}
+
+.ai-note-inline strong {
+  color: #fff;
+  font-weight: 600;
 }
 
 .messages-container {

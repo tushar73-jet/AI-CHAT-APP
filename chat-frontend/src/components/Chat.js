@@ -149,16 +149,17 @@ const Chat = ({ token, username, onLogout }) => {
 
       <div className="chat-main">
         <div className="chat-header">
-          <div className="chat-header-top">
+          <div className="header-left">
             <h2>{getDisplayRoomName()}</h2>
-            <span style={{ color: isConnected ? 'green' : 'red', fontSize: '12px' }}>
-              ● {isConnected ? 'Connected' : 'Not connected'}
+            <span className="status-badge" style={{ color: isConnected ? '#4ade80' : '#f87171' }}>
+              ● {isConnected ? 'Connected' : 'Offline'}
             </span>
           </div>
+
           {!room.startsWith('dm:') && (
-            <div className="ai-bot-note">
+            <div className="ai-note-inline">
               <span className="bot-icon">🤖</span>
-              <span>Use <strong>@bot</strong> to chat with AI.</span>
+              <span>Use <strong>@bot</strong> to chat with AI</span>
             </div>
           )}
         </div>
