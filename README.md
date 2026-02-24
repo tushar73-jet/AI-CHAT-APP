@@ -1,11 +1,11 @@
 # AI Chat Application
 
-A robust, real-time chat application featuring user authentication, direct/group messaging, and an integrated AI assistant powered by OpenAI.
+A robust, real-time chat application featuring user authentication, direct/group messaging, and an integrated AI assistant powered by Groq.
 
 ## 🚀 Features
 
 - **Real-Time Messaging**: Instant communication powered by [Socket.io](https://socket.io/).
-- **AI Chatbot Integration**: Mention `@bot` in any room to interact with an AI assistant (uses OpenAI APi).
+- **AI Chatbot Integration**: Mention `@bot` in any room to interact with an AI assistant (uses Groq API).
 - **Direct Messaging & Rooms**: Support for shared chat rooms and private 1-on-1 (DM) conversations.
 - **Authentication**: Secure user registration and login using JWT and `bcrypt`.
 - **Typing Indicators**: See when other users are tying in real-time.
@@ -20,7 +20,7 @@ A robust, real-time chat application featuring user authentication, direct/group
 - **Node.js** & **Express**
 - **Socket.io** (with `@socket.io/redis-adapter` support)
 - **Prisma** (PostgreSQL)
-- **OpenAI API** (`gpt-4o-mini`)
+- **Groq API**
 - **JWT** (JSON Web Tokens) & **Bcrypt** for Auth
 - **ioredis** (Redis client)
 
@@ -39,7 +39,7 @@ Follow these instructions to set up the project locally.
 - [Node.js](https://nodejs.org/) (v16 or higher recommended)
 - A [PostgreSQL](https://www.postgresql.org/) database
 - (Optional) A [Redis](https://redis.io/) server for Socket.io scaling
-- An [OpenAI API Key](https://platform.openai.com/api-keys) for the `@bot` feature
+- A [Groq API Key](https://console.groq.com/keys) for the `@bot` feature
 
 ### 1. Database Setup
 
@@ -66,8 +66,8 @@ DATABASE_URL="postgresql://user:password@localhost:5432/chat_db?schema=public"
 # JWT Secret for Authentication
 JWT_SECRET="your_super_secret_jwt_key_here"
 
-# OpenAI API Key for the AI Chatbot
-OPENAI_API_KEY="your_openai_api_key_here"
+# Groq API Key for the AI Chatbot
+GROQ_API_KEY="your_groq_api_key_here"
 
 # (Optional) Redis URL for multi-instance Socket.io scaling
 # REDIS_URL="redis://localhost:6379"
@@ -108,7 +108,7 @@ npm start
 
 ## 🤖 Using the AI Bot
 
-Once logged in, simply type a message starting with `@bot` in any shared room. The backend will call the OpenAI API and the bot will reply directly in the chat!
+Once logged in, simply type a message starting with `@bot` in any shared room. The backend will call the Groq API and the bot will reply directly in the chat!
 
 Example:
 > `@bot What is the capital of France?`
