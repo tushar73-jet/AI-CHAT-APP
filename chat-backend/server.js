@@ -100,20 +100,20 @@ const Redis = require("ioredis");
 
 
 async function getAIResponse(message) {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     return "AI service is not configured.";
   }
 
   try {
     const fetchFn = globalThis.fetch || require('node-fetch');
-    const response = await fetchFn("https://api.openai.com/v1/chat/completions", {
+    const response = await fetchFn("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "llama-3.1-8b-instant",
         messages: [
           { role: "system", content: "You are a friendly AI chatbot." },
           { role: "user", content: message }
