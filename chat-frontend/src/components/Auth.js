@@ -1,85 +1,55 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { GoogleLogin } from '@react-oauth/google';
 import './Auth.css';
 
 const API_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:3005'}/api/auth`;
 
 const Auth = ({ onLogin }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
+  const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const response = await axios.post(
-        `${API_URL}/${isLogin ? 'login' : 'register'}`,
-        { username, password }
-      );
+      const { credential } = credentialResponse;
+      const response = await axios.post(`${API_URL}/google`, {
+        token: credential
+      });
 
-      if (isLogin) {
-        onLogin(response.data.token, username);
-      } else {
-        setError('Registration successful! Please login.');
-        setIsLogin(true);
-        setUsername('');
-        setPassword('');
-      }
+      // The backend should return the JWT app token and username
+      onLogin(response.data.token, response.data.username);
     } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred');
+      setError(err.response?.data?.error || 'Authentication failed');
+      console.error(err);
     }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google Sign-In failed');
   };
 
   return (
     <div className="auth-container">
       <div className="auth-card">
         <h1>ChatApp</h1>
-        <h2>{isLogin ? 'Login' : 'Register'}</h2>
+        <h2>Sign In</h2>
 
-        <div className="loading-note">
+        <div className="loading-note" style={{ marginBottom: "20px" }}>
           <span className="info-icon">ℹ️</span>
-          <span>Note: Initial page load may take up to 1 minute to start. Please be patient.</span>
+          <span>Welcome! Please sign in with Google to join the chat.</span>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            theme="filled_blue"
+            size="large"
+            text="continue_with"
+            shape="rectangular"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        </div>
 
-          {error && <div className="error">{error}</div>}
-
-          <button type="submit" className="auth-button">
-            {isLogin ? 'Login' : 'Register'}
-          </button>
-        </form>
-
-        <p className="auth-switch">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button
-            type="button"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-            }}
-            className="switch-button"
-          >
-            {isLogin ? 'Register' : 'Login'}
-          </button>
-        </p>
+        {error && <div className="error">{error}</div>}
       </div>
     </div>
   );

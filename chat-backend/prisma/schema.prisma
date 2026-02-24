@@ -10,7 +10,7 @@ datasource db {
 model User {
   id            Int       @id @default(autoincrement())
   username      String    @unique
-  password_hash String
+  googleId      String?   @unique
   createdAt     DateTime  @default(now()) @map("created_at")
   messages      Message[]
 

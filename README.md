@@ -7,7 +7,7 @@ A robust, real-time chat application featuring user authentication, direct/group
 - **Real-Time Messaging**: Instant communication powered by [Socket.io](https://socket.io/).
 - **AI Chatbot Integration**: Mention `@bot` in any room to interact with an AI assistant (uses Groq API).
 - **Direct Messaging & Rooms**: Support for shared chat rooms and private 1-on-1 (DM) conversations.
-- **Authentication**: Secure user registration and login using JWT and `bcrypt`.
+- **Authentication**: Secure Google OAuth integration using `@react-oauth/google` and `google-auth-library` (JSON Web Tokens to persist session).
 - **Typing Indicators**: See when other users are tying in real-time.
 - **Database Persistence**: Messages and users are securely stored in PostgreSQL using [Prisma ORM](https://www.prisma.io/).
 - **Scalable Architecture**: Optional [Redis](https://redis.io/) adapter for Socket.io, enabling horizontal scaling.
@@ -21,7 +21,7 @@ A robust, real-time chat application featuring user authentication, direct/group
 - **Socket.io** (with `@socket.io/redis-adapter` support)
 - **Prisma** (PostgreSQL)
 - **Groq API**
-- **JWT** (JSON Web Tokens) & **Bcrypt** for Auth
+- **Google Auth Library** (for token verification)
 - **ioredis** (Redis client)
 
 ### Frontend
@@ -29,6 +29,7 @@ A robust, real-time chat application featuring user authentication, direct/group
 - **Socket.io-client**
 - **Axios**
 - **emoji-picker-react**
+- **@react-oauth/google**
 
 ## 🏁 Getting Started
 
@@ -39,7 +40,8 @@ Follow these instructions to set up the project locally.
 - [Node.js](https://nodejs.org/) (v16 or higher recommended)
 - A [PostgreSQL](https://www.postgresql.org/) database
 - (Optional) A [Redis](https://redis.io/) server for Socket.io scaling
-- A [Groq API Key](https://console.groq.com/keys) for the `@bot` feature
+- An [OpenAI API Key](https://platform.openai.com/api-keys) for the `@bot` feature
+- A **Google Client ID** for OAuth functionality
 
 ### 1. Database Setup
 
@@ -63,8 +65,11 @@ PORT=3005
 # Prisma Database Connection
 DATABASE_URL="postgresql://user:password@localhost:5432/chat_db?schema=public"
 
-# JWT Secret for Authentication
+# JWT Secret for App Sessions
 JWT_SECRET="your_super_secret_jwt_key_here"
+
+# Google OAuth Client ID
+GOOGLE_CLIENT_ID="your_google_client_id_here"
 
 # Groq API Key for the AI Chatbot
 GROQ_API_KEY="your_groq_api_key_here"
@@ -97,6 +102,17 @@ Open a new terminal and navigate to the frontend directory:
 ```bash
 cd chat-frontend
 npm install
+```
+
+Create a `.env` file in the `chat-frontend` directory and configure the environment variables:
+
+```env
+# Google OAuth Client ID
+REACT_APP_GOOGLE_CLIENT_ID="your_google_client_id_here"
+
+# Optional: Override Backend API URL
+# REACT_APP_API_URL="http://localhost:3005"
+# REACT_APP_SOCKET_URL="http://localhost:3005"
 ```
 
 Start the frontend development server:
