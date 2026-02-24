@@ -33,9 +33,15 @@ const Auth = ({ onLogin }) => {
         <h1>ChatApp</h1>
         <h2>Sign In</h2>
 
-        <div className="loading-note" style={{ marginBottom: "20px" }}>
-          <span className="info-icon">ℹ️</span>
-          <span>Welcome! Please sign in with Google to join the chat.</span>
+        <div className="welcome-section">
+          <p className="subtitle">Please sign in to join the conversation.</p>
+        </div>
+
+        <div className="loading-note" style={{ marginBottom: "25px" }}>
+          <span className="info-icon">⏳</span>
+          <div>
+            <strong>Important Note:</strong> Note: First login may take up to 1 minute (Render server wake-up)
+          </div>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
