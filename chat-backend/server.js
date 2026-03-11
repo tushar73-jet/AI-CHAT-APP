@@ -1,248 +1,29 @@
 require('dotenv').config();
-const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
-const prisma = require('./src/config/prisma');
-const authRoutes = require('./src/routes/auth');
-const authSocket = require('./src/middleware/authSocket');
-const bcrypt = require('bcryptjs');
-const rateLimit = require('express-rate-limit')
 
-const app = express();
+const app = require('./src/app');
+const { corsOptions } = require('./src/config/cors');
+const { setupRedisAdapter } = require('./src/config/redis');
+const authSocket = require('./src/middleware/authSocket');
+const { setupSockets } = require('./src/sockets');
+const { startCleanupJob } = require('./src/jobs/cleanup');
+
 const server = http.createServer(app);
 
-const userSockets = new Map();
-
-async function getBotUser() {
-  try {
-    let botUser = await prisma.user.findUnique({ where: { username: 'AI Bot' } });
-    if (!botUser) {
-      botUser = await prisma.user.create({
-        data: { username: 'AI Bot' }
-      });
-    }
-    return botUser;
-  } catch (err) {
-    console.error('Error getting bot user:', err);
-    return null;
-  }
-}
-
-const envOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
-const defaultOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3005'];
-const allowedOrigins = [...new Set([...envOrigins, ...defaultOrigins])];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
-      callback(null, true);
-    } else {
-      console.log("Blocked by CORS:", origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-};
-
-app.use(cors(corsOptions));
-app.use(express.json());
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Too many requests from this IP, please try again later."
-});
-app.use(limiter);
-app.use('/api/auth', authRoutes);
-// Global API error handler
-app.use((err, req, res, next) => {
-  console.error("API Error:", err);
-  res.status(500).json({ error: "Internal Server Error" });
-});
-
-
 const io = new Server(server, { cors: corsOptions });
+
+// Middleware for socket auth
 io.use(authSocket);
-const { createAdapter } = require("@socket.io/redis-adapter");
-const Redis = require("ioredis");
 
-(async () => {
-  if (!process.env.REDIS_URL) {
-    console.log("REDIS_URL not set, skipping Redis adapter");
-    return;
-  }
-  try {
-    const pubClient = new Redis(process.env.REDIS_URL, {
-      retryStrategy: times => {
-        // Stop retrying after 3 attempts if it fails
-        if (times > 3) {
-          console.log("Redis connection failed too many times, disabling adapter.");
-          return null;
-        }
-        return Math.min(times * 50, 2000);
-      }
-    });
-    const subClient = pubClient.duplicate();
+// Initialize Redis adapter if URL is available
+setupRedisAdapter(io);
 
-    pubClient.on('error', err => console.error("Redis Pub Error:", err.message));
-    subClient.on('error', err => console.error("Redis Sub Error:", err.message));
+// Setup WebSockets
+setupSockets(io);
 
-    io.adapter(createAdapter(pubClient, subClient));
-    console.log("Redis adapter initialized");
-  } catch (err) {
-    console.error("Redis setup error:", err);
-  }
-})();
-
-
-async function getAIResponse(message) {
-  if (!process.env.GROQ_API_KEY) {
-    return "AI service is not configured.";
-  }
-
-  try {
-    const fetchFn = globalThis.fetch || require('node-fetch');
-    const response = await fetchFn("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
-        messages: [
-          { role: "system", content: "You are a friendly AI chatbot." },
-          { role: "user", content: message }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      return "AI service error. Please check your API key.";
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "Sorry, I couldn't understand that.";
-  } catch (err) {
-    return "AI bot failed to respond.";
-  }
-}
-
-
-io.on('connection', (socket) => {
-  socket.on("error", (err) => {
-    console.error("Socket error:", err);
-  });
-
-  socket.username = socket.user.username;
-  userSockets.set(socket.username, socket.id);
-  io.emit('updateUserList', Array.from(userSockets.keys()));
-
-  socket.on('joinRoom', async (room) => {
-    socket.join(room);
-
-    try {
-      const messages = await prisma.message.findMany({
-        where: { room },
-        orderBy: { createdAt: 'asc' },
-        include: { user: { select: { username: true } } }
-      });
-
-      socket.emit('loadHistory', messages.map(msg => ({
-        content: msg.content,
-        username: msg.user.username,
-        createdAt: msg.createdAt
-      })));
-    } catch (err) {
-      console.error(err);
-    }
-  });
-
-  socket.on('chatMessage', async (data) => {
-    const { room, content } = data;
-
-    try {
-      const msg = await prisma.message.create({
-        data: { content, room, userId: socket.user.id }
-      });
-
-      const messageData = {
-        content: msg.content,
-        username: socket.user.username,
-        createdAt: msg.createdAt
-      };
-
-      if (room.startsWith('dm:')) {
-        const usernames = room.split(':')[1].split('-');
-        const otherUser = usernames.find(u => u !== socket.username);
-        const recipientSocketId = userSockets.get(otherUser);
-
-        if (recipientSocketId) {
-          io.to(recipientSocketId).emit('chatMessage', messageData);
-        }
-
-        socket.emit('chatMessage', messageData);
-
-      } else {
-
-        io.to(room).emit('chatMessage', messageData);
-      }
-
-
-      if (content.toLowerCase().startsWith('@bot') && !room.startsWith('dm:')) {
-        const userPrompt = content.replace(/@bot/gi, '').trim();
-        if (userPrompt) {
-          const aiReply = await getAIResponse(userPrompt);
-          const botUser = await getBotUser();
-
-          if (botUser) {
-            const botMsg = await prisma.message.create({
-              data: { content: aiReply, room, userId: botUser.id }
-            });
-
-            io.to(room).emit('chatMessage', {
-              content: botMsg.content,
-              username: botUser.username,
-              createdAt: botMsg.createdAt
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  });
-
-  socket.on('typing', ({ room }) => {
-    socket.to(room).emit('typing', { username: socket.username });
-  });
-
-  socket.on('stopTyping', ({ room }) => {
-    socket.to(room).emit('stopTyping', { username: socket.username });
-  });
-
-
-  socket.on('disconnect', () => {
-    userSockets.delete(socket.username);
-    io.emit('updateUserList', Array.from(userSockets.keys()));
-  });
-
-});
-
-setInterval(async () => {
-  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  try {
-    await prisma.message.deleteMany({
-      where: { createdAt: { lt: cutoff } }
-    });
-    console.log("Old messages deleted");
-  } catch (err) {
-    console.error("Cleanup error:", err);
-  }
-}, 60 * 60 * 1000);
+// Start background job for deleting old messages
+startCleanupJob();
 
 const PORT = process.env.PORT || 3005;
 
